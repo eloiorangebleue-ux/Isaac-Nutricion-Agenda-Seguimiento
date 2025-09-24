@@ -38,46 +38,50 @@
 
   <script>
     const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw4p-6JUt9kx5K5qbFSWffaX9FtEQ0tK_ptRrYTSlZzIr-MxlAZPEIr0MK22fvDboGrUw/exec';
-    let charts={}, fechasGlobal=[];
+    let charts = {}, fechasGlobal = [];
 
-    function drawChart(id,data,color){
-      const ctx=document.getElementById(id).getContext('2d');
-      if(charts[id]){
-        charts[id].data.labels=fechasGlobal; charts[id].data.datasets[0].data=data; charts[id].update();
-      }else{
-        charts[id]=new Chart(ctx,{
-          type:'line',
-          data:{labels:fechasGlobal,datasets:[{data,borderColor:color,backgroundColor:color+'33',fill:true,tension:0.4,pointRadius:4}]},
-          options:{responsive:true,maintainAspectRatio:false,
-            scales:{x:{grid:{display:false}},y:{beginAtZero:false,grid:{color:'#eee'}}},
-            plugins:{legend:{display:false}}
+    function drawChart(id, data, color) {
+      const ctx = document.getElementById(id).getContext('2d');
+      if (charts[id]) {
+        charts[id].data.labels = fechasGlobal;
+        charts[id].data.datasets[0].data = data;
+        charts[id].update();
+      } else {
+        charts[id] = new Chart(ctx, {
+          type: 'line',
+          data: { labels: fechasGlobal, datasets: [{ data, borderColor: color, backgroundColor: color + '33', fill: true, tension: 0.4, pointRadius: 4 }] },
+          options: { responsive: true, maintainAspectRatio: false,
+            scales: { x: { grid: { display: false } }, y: { beginAtZero: false, grid: { color: '#eee' } } },
+            plugins: { legend: { display: false } }
           }
         });
       }
     }
 
-    function renderizarGraficos(datos){
-      datos.sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
-      fechasGlobal=datos.map(r=>new Date(r.Fecha).toLocaleDateString('es-ES',{month:'short',day:'numeric'}));
-      const m=f=>datos.map(r=>parseFloat(r[f])||0);
-      drawChart('pesoChart',m('Peso corporal Kg'),'#ff6b35');
-      drawChart('bmiChart',m('BMI (Índice Masa Corporal)'),'#667eea');
-      drawChart('grasaChart',m('% Grasa corporal'),'#f5576c');
-      drawChart('aguaChart',m('% Agua total del cuerpo'),'#4facfe');
-      drawChart('musculoChart',m('Masa muscular Kg'),'#4ade80');
-      drawChart('bmrChart',m('BMR (Tasa Metabólica Basal)'),'#764ba2');
-      drawChart('edadMetabolicaChart',m('Edad metabólica'),'#f093fb');
-      drawChart('grasaVisceralChart',m('Nivel de grasa visceral'),'#ff8e53');
+    function renderizarGraficos(datos) {
+      datos.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+      fechasGlobal = datos.map(r => new Date(r.Fecha).toLocaleDateString('es-ES',{month:'short',day:'numeric'}));
+      const m = f => datos.map(r => parseFloat(r[f]) || 0);
+      drawChart('pesoChart', m('Peso corporal Kg'), '#ff6b35');
+      drawChart('bmiChart', m('BMI (Índice Masa Corporal)'), '#667eea');
+      drawChart('grasaChart', m('% Grasa corporal'), '#f5576c');
+      drawChart('aguaChart', m('% Agua total del cuerpo'), '#4facfe');
+      drawChart('musculoChart', m('Masa muscular Kg'), '#4ade80');
+      drawChart('bmrChart', m('BMR (Tasa Metabólica Basal)'), '#764ba2');
+      drawChart('edadMetabolicaChart', m('Edad metabólica'), '#f093fb');
+      drawChart('grasaVisceralChart', m('Nivel de grasa visceral'), '#ff8e53');
     }
 
-    async function init(){
-      const allData=await fetch(SHEET_URL).then(r=>r.json());
-      const nombres=[...new Set(allData.map(r=>r.Nombre))];
-      const sel=document.getElementById('clienteSelect');
-      sel.innerHTML='<option value=\"\">—Selecciona cliente—</option>';
-      nombres.forEach(n=>{const o=document.createElement('option');o.value=n; o.textContent=n; sel.appendChild(o);});
-      sel.addEventListener('change',()=>fetch(sel.value?`${SHEET_URL}?nombre=${encodeURIComponent(sel.value)}`:SHEET_URL)
-        .then(r=>r.json()).then(renderizarGraficos));
+    async function init() {
+      const allData = await fetch(SHEET_URL).then(r => r.json());
+      const nombres = [...new Set(allData.map(r => r.Nombre))];
+      const sel = document.getElementById('clienteSelect');
+      sel.innerHTML = '<option value="">—Selecciona cliente—</option>';
+      nombres.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+      sel.addEventListener('change', () => {
+        const url = sel.value ? `${SHEET_URL}?nombre=${encodeURIComponent(sel.value)}` : SHEET_URL;
+        fetch(url).then(r => r.json()).then(renderizarGraficos);
+      });
       renderizarGraficos(allData);
     }
 
